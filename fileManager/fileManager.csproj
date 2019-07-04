@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="ListView.cs" />
     <Compile Include="ListViewItem.cs" />
+    <Compile Include="PathView.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

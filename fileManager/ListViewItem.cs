@@ -17,6 +17,11 @@ namespace fileManager
             this.columns = columns;
         }
 
+        public string ReturnItemName()
+        {
+            return columns[0];
+        }
+
         internal void Render(List<int> columnsWidth, int elementIndex, int listViewX, int listViewY)
         {
             for (int i = 0; i < columns.Length; i++)

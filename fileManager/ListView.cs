@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ namespace fileManager
 {
     class ListView
     {
+        public PathView dir;
         private int selectedPrevIndex;
         private int selectedIndex;
         private bool wasPainted;
@@ -24,13 +26,14 @@ namespace fileManager
             this.x = x;
             this.y = y;
             this.height = height;
+            dir = new PathView();
         }
 
         public void Clean()
         {
             selectedIndex = selectedPrevIndex = 0;
             wasPainted = false;
-            for (int i = 0; i < Items.Count; i++)
+            for (int i = 0; i < Math.Min(height, Items.Count); i++)
             {
                 Console.CursorLeft = x;
                 Console.CursorTop = i + y;
@@ -44,7 +47,8 @@ namespace fileManager
 
         public void Render()
         {
-            for (int i = 0; i <Math.Min(height, Items.Count); i++)
+            dir.Show(x);
+            for (int i = 0; i < Math.Min(height, Items.Count); i++)
             {
 
                 int elementIndex = i + scroll;
@@ -75,13 +79,14 @@ namespace fileManager
         }
         public void Update(ConsoleKeyInfo key)
         {
+
             selectedPrevIndex = selectedIndex;
             if (key.Key == ConsoleKey.DownArrow && selectedIndex + 1 < Items.Count)
                 selectedIndex++;
             else if (key.Key == ConsoleKey.UpArrow && selectedIndex - 1 >= 0)
                 selectedIndex--;
 
-            if (selectedIndex >= height+scroll)
+            if (selectedIndex >= height + scroll)
             {
                 scroll++;
                 wasPainted = false;
@@ -92,9 +97,42 @@ namespace fileManager
                 wasPainted = false;
             }
             else if (key.Key == ConsoleKey.Enter)
-                Selected(this, EventArgs.Empty);
+            {
+                if (Items.Count == 0)
+                {
+                    Console.Clear();
+                    Console.WriteLine("There is no items to choose. Press something and cats will love you!");
+                    Console.ReadLine();
+                    Console.Clear();
+                    this.Render();
+                }
+                else {
+                    dir.Go(Items[selectedIndex].ReturnItemName());
+                    Selected(this, EventArgs.Empty);
+                }
+            }
+            else if (key.Key == ConsoleKey.Backspace)
+            {
+                dir.GoUp();
+                Up(this, EventArgs.Empty);
+            }
+            else if (key.Key == ConsoleKey.F4)
+            {
+                Items.Clear();
+                Console.Clear();
+                dir.Clear();
+                string[] discs = Environment.GetLogicalDrives();
+                for (int i = 0; i < discs.Length; i++)
+                {
+                    DirectoryInfo dc = (new DirectoryInfo(discs[i]));
+                    Items.Add(new ListViewItem((object)dc, dc.ToString()));
+                }
+                wasPainted = false;
+            }
+
         }
 
         public event EventHandler Selected;
+        public event EventHandler Up;
     }
 }
