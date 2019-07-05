@@ -17,7 +17,7 @@ namespace fileManager
             this.columns = columns;
         }
 
-        public string ReturnItemName()
+        public string ReturnItemDir()
         {
             return columns[0];
         }

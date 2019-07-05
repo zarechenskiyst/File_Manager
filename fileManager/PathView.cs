@@ -19,16 +19,16 @@ namespace fileManager
 
             currentPath = basePath;
         }
-        public string GetDirectory()
+        public string Getdirectoryectory()
         {
             return currentPath;
         }
 
-        public void Show(int x)
+        public void Show(int x, int maxWidth)
         {
             Console.CursorTop = 0;
             Console.CursorLeft = x;
-            Console.Write(currentPath.PadRight(Console.WindowWidth));
+            Console.Write(currentPath.PadRight(maxWidth));
         }
 
         public void Clear()
@@ -36,9 +36,9 @@ namespace fileManager
             currentPath = "";
         }
 
-        public void Go(string dirName)
+        public void Go(string directoryName)
         {
-            var newPath = Path.Combine(currentPath, dirName);
+            var newPath = Path.Combine(currentPath, directoryName);
             newPath = Path.GetFullPath(newPath);
             if (File.Exists(newPath) || Directory.Exists(newPath))
                 currentPath = newPath;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,7 +10,7 @@ namespace fileManager
 {
     class ListView
     {
-        public PathView dir;
+        public PathView directory;
         private int selectedPrevIndex;
         private int selectedIndex;
         private bool wasPainted;
@@ -26,7 +27,14 @@ namespace fileManager
             this.x = x;
             this.y = y;
             this.height = height;
-            dir = new PathView();
+            directory = new PathView();
+
+            ColumnsWidth = new List<int> { Console.WindowWidth / 2 - 30, 13, 13 };
+            Items = GetItems(directory.Getdirectoryectory());
+
+            Selected += View_Selected;
+            Up += UpDirectory;
+
         }
 
         public void Clean()
@@ -47,11 +55,12 @@ namespace fileManager
 
         public void Render()
         {
-            dir.Show(x);
+            directory.Show(x, ColumnsWidth.Sum());
             for (int i = 0; i < Math.Min(height, Items.Count); i++)
             {
 
-                int elementIndex = i + scroll;
+                int elementIndex =i+scroll;
+                
 
                 if (wasPainted)
                 {
@@ -100,27 +109,24 @@ namespace fileManager
             {
                 if (Items.Count == 0)
                 {
-                    Console.Clear();
-                    Console.WriteLine("There is no items to choose. Press something and cats will love you!");
-                    Console.ReadLine();
-                    Console.Clear();
-                    this.Render();
+                    this.Error("There is no items to choose.");
                 }
-                else {
-                    dir.Go(Items[selectedIndex].ReturnItemName());
+                else
+                {
+                    directory.Go(Items[selectedIndex].ReturnItemDir());
                     Selected(this, EventArgs.Empty);
                 }
             }
             else if (key.Key == ConsoleKey.Backspace)
             {
-                dir.GoUp();
+                directory.GoUp();
                 Up(this, EventArgs.Empty);
             }
             else if (key.Key == ConsoleKey.F4)
             {
                 Items.Clear();
                 Console.Clear();
-                dir.Clear();
+                directory.Clear();
                 string[] discs = Environment.GetLogicalDrives();
                 for (int i = 0; i < discs.Length; i++)
                 {
@@ -130,6 +136,79 @@ namespace fileManager
                 wasPainted = false;
             }
 
+        }
+
+        private static List<ListViewItem> GetItems(string path)
+        {
+            return new DirectoryInfo(path).GetFileSystemInfos().
+                Select(f =>
+                new ListViewItem(
+                    f,
+                    f.Name,
+                    f is DirectoryInfo ? "<directory>" : f.Extension,
+                    f is FileInfo ? (f as FileInfo).Length.ToString() : ""
+                )).ToList();
+
+        }
+
+        public void Error(string message)
+        {
+            Console.Clear();
+            Console.WriteLine(message);
+            Console.WriteLine();
+            Console.WriteLine("Press something and we continue ;)");
+            Console.ReadLine();
+            Console.Clear();
+            this.Render();
+        }
+
+        private static void View_Selected(object sender, EventArgs e)
+        {
+            var view = (ListView)sender;
+            var info = view.SelectedItem.State;
+            view.Clean();
+            if (info is FileInfo)
+            {
+                try
+                {
+                    Process.Start((info as FileInfo).FullName);
+                }
+                catch
+                {
+                    view.Error("You can't open this file(");
+                }
+            }
+            else if (info is DirectoryInfo)
+            {
+                try
+                {
+                    view.Items = GetItems((info as DirectoryInfo).FullName);
+                }
+                catch
+                {
+                    view.Error("You can't open this directoryectory(");
+                }
+
+            }
+
+        }
+        private static void UpDirectory(object sender, EventArgs e)
+        {
+            var view = (ListView)sender;
+            object info = new object();
+
+            if (view.Items.Count != 0)
+                info = view.SelectedItem.State;
+
+            view.Clean();
+            try
+            {
+                view.Items = GetItems(view.directory.Getdirectoryectory());
+            }
+            catch
+            {
+                view.Error("You can't open this directoryectory(");
+            }
         }
 
         public event EventHandler Selected;

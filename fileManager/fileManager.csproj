@@ -58,6 +58,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DirectoryCommander.cs" />
     <Compile Include="ListView.cs" />
     <Compile Include="ListViewItem.cs" />
     <Compile Include="PathView.cs" />
