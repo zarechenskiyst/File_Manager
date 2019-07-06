@@ -19,6 +19,8 @@ namespace fileManager
 
         private int scroll;
 
+        private MyBuffer buffer;
+
         public List<int> ColumnsWidth { get; set; }
         public List<ListViewItem> Items { get; set; }
 
@@ -95,7 +97,7 @@ namespace fileManager
             else if (key.Key == ConsoleKey.UpArrow && selectedIndex - 1 >= 0)
                 selectedIndex--;
 
-            if (selectedIndex >= height + scroll)
+            if (selectedIndex >=height + scroll)
             {
                 scroll++;
                 wasPainted = false;
@@ -116,16 +118,18 @@ namespace fileManager
                     directory.Go(Items[selectedIndex].ReturnItemDir());
                     Selected(this, EventArgs.Empty);
                 }
+                scroll = 0;
             }
             else if (key.Key == ConsoleKey.Backspace)
             {
                 directory.GoUp();
                 Up(this, EventArgs.Empty);
+                scroll = 0;
             }
             else if (key.Key == ConsoleKey.F4)
             {
+                Clean();
                 Items.Clear();
-                Console.Clear();
                 directory.Clear();
                 string[] discs = Environment.GetLogicalDrives();
                 for (int i = 0; i < discs.Length; i++)
@@ -134,6 +138,17 @@ namespace fileManager
                     Items.Add(new ListViewItem((object)dc, dc.ToString()));
                 }
                 wasPainted = false;
+            }
+            else if (key.Key == ConsoleKey.F1)
+            {
+                buffer=new MyBuffer(directory.ReturnStringPath());
+            }
+            else if (key.Key == ConsoleKey.F3)
+            {
+             /*   if ((object)new DirectoryInfo(directory.ReturnStringPath()) is FileInfo)
+                    buffer.DirectoryCopy(buffer.buffPath, directory.ReturnStringPath());
+                else if ((object)new DirectoryInfo(directory.ReturnStringPath()) is DirectoryInfo)
+                    buffer.DirectoryCopy(buffer.buffPath, directory.ReturnStringPath());*/
             }
 
         }
@@ -188,18 +203,14 @@ namespace fileManager
                 {
                     view.Error("You can't open this directoryectory(");
                 }
-
             }
-
         }
         private static void UpDirectory(object sender, EventArgs e)
         {
             var view = (ListView)sender;
             object info = new object();
-
             if (view.Items.Count != 0)
                 info = view.SelectedItem.State;
-
             view.Clean();
             try
             {
@@ -209,6 +220,7 @@ namespace fileManager
             {
                 view.Error("You can't open this directoryectory(");
             }
+            
         }
 
         public event EventHandler Selected;

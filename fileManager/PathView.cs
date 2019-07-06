@@ -31,6 +31,11 @@ namespace fileManager
             Console.Write(currentPath.PadRight(maxWidth));
         }
 
+        public string ReturnStringPath()
+        {
+            return currentPath;
+        }
+
         public void Clear()
         {
             currentPath = "";

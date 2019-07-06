@@ -34,9 +34,9 @@ namespace fileManager
 
         internal void Clean(List<int> columnsWidth, int i, int x, int y)
         {
-            Console.CursorTop = i + y;
-            Console.CursorLeft = x;
-            Console.Write(new string(' ', columnsWidth.Sum()));
+                Console.CursorTop = i + y;
+                Console.CursorLeft = x;
+                Console.Write(new string(' ', columnsWidth.Sum()));
         }
 
         private string GetStringWithLength(string v1, int maxLength)
