@@ -17,7 +17,7 @@ namespace fileManager
             this.columns = columns;
         }
 
-        public string ReturnItemDir()
+        public string ReturnItemName()
         {
             return columns[0];
         }
@@ -46,5 +46,7 @@ namespace fileManager
             else
                 return v1.Substring(0, maxLength - 5) + "[...]";
         }
+
+
     }
 }

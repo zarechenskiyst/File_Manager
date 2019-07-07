@@ -61,8 +61,8 @@ namespace fileManager
             for (int i = 0; i < Math.Min(height, Items.Count); i++)
             {
 
-                int elementIndex =i+scroll;
-                
+                int elementIndex = i + scroll;
+
 
                 if (wasPainted)
                 {
@@ -97,7 +97,7 @@ namespace fileManager
             else if (key.Key == ConsoleKey.UpArrow && selectedIndex - 1 >= 0)
                 selectedIndex--;
 
-            if (selectedIndex >=height + scroll)
+            if (selectedIndex >= height + scroll)
             {
                 scroll++;
                 wasPainted = false;
@@ -115,7 +115,7 @@ namespace fileManager
                 }
                 else
                 {
-                    directory.Go(Items[selectedIndex].ReturnItemDir());
+                    directory.Go(Items[selectedIndex].ReturnItemName());
                     Selected(this, EventArgs.Empty);
                 }
                 scroll = 0;
@@ -141,14 +141,35 @@ namespace fileManager
             }
             else if (key.Key == ConsoleKey.F1)
             {
-                buffer=new MyBuffer(directory.ReturnStringPath());
+               buffer = new MyBuffer(directory.ReturnStringPath() +"\\"+ Items[selectedIndex].ReturnItemName());
             }
+            else if (key.Key==ConsoleKey.F2)
+            {
+                string fullPath = directory.ReturnStringPath() + "\\" + Items[selectedIndex].ReturnItemName();
+                Directory.CreateDirectory("temp");
+                buffer = new MyBuffer("temp");
+                if (Items[selectedIndex].ReturnItemName().Contains("."))
+                {
+                    buffer.FileCopy(fullPath, buffer.buffPath);
+                    File.Delete(fullPath);
+                }
+                else
+                {
+                    buffer.DirectoryCopy(fullPath, buffer.buffPath);
+                    buffer.DeleteDirectory(fullPath);
+                }
+                buffer = new MyBuffer(buffer.buffPath + "\\" + Items[selectedIndex].ReturnItemName());
+
+                }
             else if (key.Key == ConsoleKey.F3)
             {
-             /*   if ((object)new DirectoryInfo(directory.ReturnStringPath()) is FileInfo)
+                if (buffer.buffPath.Contains("."))
+                    buffer.FileCopy(buffer.buffPath, directory.ReturnStringPath());
+                else
                     buffer.DirectoryCopy(buffer.buffPath, directory.ReturnStringPath());
-                else if ((object)new DirectoryInfo(directory.ReturnStringPath()) is DirectoryInfo)
-                    buffer.DirectoryCopy(buffer.buffPath, directory.ReturnStringPath());*/
+                wasPainted = false;
+                if (Directory.Exists("temp"))
+                       buffer.DeleteDirectory("temp");
             }
 
         }
@@ -220,7 +241,7 @@ namespace fileManager
             {
                 view.Error("You can't open this directoryectory(");
             }
-            
+
         }
 
         public event EventHandler Selected;
