@@ -141,36 +141,87 @@ namespace fileManager
             }
             else if (key.Key == ConsoleKey.F1)
             {
-               buffer = new MyBuffer(directory.ReturnStringPath() +"\\"+ Items[selectedIndex].ReturnItemName());
+                buffer = new MyBuffer(directory.ReturnStringPath(), Items[selectedIndex].ReturnItemName());
             }
-            else if (key.Key==ConsoleKey.F2)
+            else if (key.Key == ConsoleKey.F2)
             {
                 string fullPath = directory.ReturnStringPath() + "\\" + Items[selectedIndex].ReturnItemName();
                 Directory.CreateDirectory("temp");
-                buffer = new MyBuffer("temp");
+                buffer = new MyBuffer("temp", Items[selectedIndex].ReturnItemName());
                 if (Items[selectedIndex].ReturnItemName().Contains("."))
                 {
-                    buffer.FileCopy(fullPath, buffer.buffPath);
+                    buffer.FileCopy(fullPath, buffer.BuffPath);
                     File.Delete(fullPath);
                 }
                 else
                 {
-                    buffer.DirectoryCopy(fullPath, buffer.buffPath);
+                    buffer.DirectoryCopy(fullPath, buffer.BuffPath);
                     buffer.DeleteDirectory(fullPath);
                 }
-                buffer = new MyBuffer(buffer.buffPath + "\\" + Items[selectedIndex].ReturnItemName());
+                buffer = new MyBuffer(buffer.BuffPath , Items[selectedIndex].ReturnItemName());
 
-                }
+            }
             else if (key.Key == ConsoleKey.F3)
             {
-                if (buffer.buffPath.Contains("."))
-                    buffer.FileCopy(buffer.buffPath, directory.ReturnStringPath());
+                if (buffer.NameFile.Contains("."))
+                    buffer.FileCopy(buffer.BuffPath,directory.ReturnStringPath());
                 else
-                    buffer.DirectoryCopy(buffer.buffPath, directory.ReturnStringPath());
+                    buffer.DirectoryCopy(buffer.BuffPath, directory.ReturnStringPath());
                 wasPainted = false;
                 if (Directory.Exists("temp"))
-                       buffer.DeleteDirectory("temp");
+                    buffer.DeleteDirectory("temp");
             }
+            else if (key.Key == ConsoleKey.F6)
+            {
+                Properties(Items[selectedIndex]);
+
+            }
+        }
+
+        private void Properties(ListViewItem view)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
+            Console.BackgroundColor = ConsoleColor.White;
+
+
+            Console.CursorLeft = 0;
+            Console.CursorTop =height/2;
+            var info = view.State;
+            if (info is FileInfo)
+            {
+                var file=info as FileInfo;
+
+                Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
+                Console.WriteLine(String.Format("{0,-30}{1,-50}", "Name: ", file.Name).PadRight(Console.WindowWidth-1, ' '));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Parent Directory: " , file.Directory).PadRight(Console.WindowWidth-1, ' '));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Root Directory: " , file.DirectoryName).PadRight(Console.WindowWidth - 1, ' '));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Is read only: " , file.IsReadOnly).PadRight(Console.WindowWidth - 1, ' '));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Last Read Time: " , file.LastAccessTime).PadRight(Console.WindowWidth - 1, ' '));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Last Write Time: " , file.LastWriteTime).PadRight(Console.WindowWidth - 1, ' '));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Size: ", file.Length).PadRight(Console.WindowWidth - 1, ' '));
+                Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
+                Console.ReadKey();
+            }
+            else
+            {
+                var dir = info as DirectoryInfo;
+
+                Console.WriteLine("=".PadRight(Console.WindowWidth-1, '='));
+                Console.WriteLine(String.Format("{0,-30}{1,-50}", "Name: ", dir.Name).PadRight(Console.WindowWidth - 1, ' '));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Root Directory: ", dir.FullName).PadRight(Console.WindowWidth - 1, ' '));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Parent Directory: ", dir.Parent.Name).PadRight(Console.WindowWidth - 1, ' '));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Last Read Time: ",  dir.LastAccessTime).PadRight(Console.WindowWidth - 1, ' '));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Last Write Time: ", dir.LastWriteTime).PadRight(Console.WindowWidth - 1, ' '));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Size: ", dir.EnumerateFiles("*.*", SearchOption.AllDirectories).Sum(fi => fi.Length)).PadRight(Console.WindowWidth - 1, ' '));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Files: ", dir.GetFiles().Length).PadRight(Console.WindowWidth - 1, ' '));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Folders: ", dir.GetDirectories().Length).PadRight(Console.WindowWidth - 1, ' '));
+                Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
+                Console.ReadKey();
+            }
+
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.BackgroundColor = ConsoleColor.Black;
+            wasPainted = false;
 
         }
 

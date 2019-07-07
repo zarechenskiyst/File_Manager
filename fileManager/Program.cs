@@ -18,7 +18,7 @@ namespace fileManager
             Console.SetBufferSize(Console.WindowWidth, Console.WindowHeight);
             Console.CursorVisible = false;
 
-            var window = new directoryectoryCommander();
+            var window = new DirectoryectoryCommander();
             window.StartProgram();
 
             /* for (int i = 0; i < 10; i++)

@@ -9,19 +9,20 @@ namespace fileManager
 {
     class MyBuffer
     {
-        public string buffPath;
+        public string BuffPath;
+        public string NameFile;
 
-        public MyBuffer(string path)
+        public MyBuffer(string path, string name)
         {
-            buffPath = path;
+            BuffPath = path;
+            NameFile = name;
         }
 
         public void DirectoryCopy(string sourceDirName, string destDirName)
         {
-
             DirectoryInfo dir = new DirectoryInfo(sourceDirName);
 
-            string destination = destDirName + "\\" + GetName(sourceDirName);
+            string destination = destDirName + "\\" + NameFile;
 
             Directory.CreateDirectory(destination);
 
@@ -40,17 +41,11 @@ namespace fileManager
             }
         }
 
-        public void FileCopy(string name, string destDirName)
+        public void FileCopy(string path,string destDirName)
         {
-            FileInfo file = new FileInfo(name);
-            string destination = destDirName + "\\" + GetName(name);
+            FileInfo file = new FileInfo(BuffPath +'\\'+NameFile);
+            string destination = destDirName + "\\" + NameFile;
             file.CopyTo(destination, true);
-        }
-
-        private string GetName(string path)
-        {
-            string[] getItemName = path.Split('\\');
-            return  getItemName[getItemName.Length - 1];
         }
 
         public void DeleteDirectory(string target_dir)
