@@ -17,10 +17,12 @@ namespace fileManager
             Console.WindowHeight = 35;
             Console.SetBufferSize(Console.WindowWidth, Console.WindowHeight);
             Console.CursorVisible = false;
+            Console.BackgroundColor = ConsoleColor.DarkGray;
 
             var window = new DirectoryectoryCommander(20);
             window.StartProgram();
 
+            
             /* for (int i = 0; i < 10; i++)
              {
                  Console.ForegroundColor = ConsoleColor.DarkBlue;

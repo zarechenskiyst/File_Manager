@@ -14,9 +14,9 @@ namespace fileManager
 
         private int onFocusedElement;
 
-        private MyBuffer buffer;
-
         private int windowHeight;
+
+        private ConsoleColor activeColor, nonActiveColor;
 
         public DirectoryectoryCommander(int windowHeight)
         {
@@ -25,7 +25,10 @@ namespace fileManager
                 new ListView(5, 2, windowHeight),
                 new ListView(Console.WindowWidth/2 +5, 2, windowHeight)
                 };
-            onFocusedElement = 1;
+            onFocusedElement = 0;
+
+            activeColor = ConsoleColor.DarkGray;
+            nonActiveColor = ConsoleColor.White;
         }
 
         public void StartProgram()
@@ -40,64 +43,47 @@ namespace fileManager
                     if (i == onFocusedElement)
                     { 
                         windows[i].Update(key);
-                        windows[i].Render();
-                        ErrorMessage("Something goes wrong");
+                        windows[i].Render(activeColor);
                     }
 
                 }
             }
-            
-
         }
 
         private void RenderItems()
         {
-            foreach (var item in windows)
+            Console.Clear();
+            for (int i = 0; i < windows.Length; i++)
             {
-                item.Render();
+                if (i == onFocusedElement)
+                    windows[i].Render(activeColor, painAll: true);
+                else
+                    windows[i].Render(nonActiveColor, true);
             }
         }
         private void Update(ConsoleKeyInfo key, ref int item)
         {
             if (key.Key == ConsoleKey.RightArrow)
+            {
                 item++;
+                RenderItems();
+            }
             else if (key.Key == ConsoleKey.LeftArrow)
+            {
                 item--;
-
+                RenderItems();
+            }
             if (item >= windows.Length)
                 item = 0;
             else if (item < 0)
                 item = windows.Length - 1;
-
             /*if (key.Key == ConsoleKey.F1)
             {
-                buffer = new MyBuffer(directory.ReturnStringPath() + "\\" + Items[selectedIndex].ReturnItemName());
+                buffer = new MyBuffer(windows[i].Items.directory.ReturnStringPath() + "\\" + Items[selectedIndex].ReturnItemName());
             }*/
         }
 
-        private void ErrorMessage(string message)
-        {
-
-            var saveForeground = Console.ForegroundColor;
-            var saveBackground = Console.BackgroundColor;
- 
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            Console.BackgroundColor = ConsoleColor.DarkCyan;
-
-            
-            Console.CursorTop = windowHeight / 2;
-
-            Console.WriteLine("=".PadRight(Console.WindowWidth - 2, '='));          
-            Console.WriteLine(string.Format("{0, -50}{1,-45}", " ", message.PadRight(Console.WindowWidth-51, ' ')));
-            Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
-            Console.WriteLine(string.Format("{0, -60}{1,-45}", " ", "OK".PadRight(Console.WindowWidth - 61, ' ')));
-
-            Console.ForegroundColor = saveForeground;
-            Console.BackgroundColor = saveBackground;
-            Console.ReadKey();
-            Console.Clear();
-            RenderItems();
-        }
+        
 
 
     }

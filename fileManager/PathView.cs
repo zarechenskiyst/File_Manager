@@ -24,11 +24,16 @@ namespace fileManager
             return currentPath;
         }
 
-        public void Show(int x, int maxWidth)
+        public void Show(int x, int maxWidth, ConsoleColor color)
         {
+            Console.BackgroundColor = color;
             Console.CursorTop = 0;
             Console.CursorLeft = x;
-            Console.Write(currentPath.PadRight(maxWidth));
+
+            if (currentPath.Length < maxWidth)
+                Console.WriteLine(currentPath.PadRight(maxWidth, ' '));
+            else
+                Console.WriteLine("[...]"+ currentPath.Substring(currentPath.Length- maxWidth +5, maxWidth - 5));
         }
 
         public string ReturnStringPath()

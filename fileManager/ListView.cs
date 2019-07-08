@@ -41,6 +41,7 @@ namespace fileManager
 
         public void Clean()
         {
+
             selectedIndex = selectedPrevIndex = 0;
             wasPainted = false;
             for (int i = 0; i < Math.Min(height, Items.Count); i++)
@@ -55,14 +56,17 @@ namespace fileManager
 
         public bool Focused { get; set; }
 
-        public void Render()
+        public void Render(ConsoleColor color, bool painAll=false)
         {
-            directory.Show(x, ColumnsWidth.Sum());
+            if (painAll)
+                wasPainted = false;
+
+            if (!wasPainted)
+                directory.Show(x, ColumnsWidth.Sum(), color);
+            Console.BackgroundColor = color;
             for (int i = 0; i < Math.Min(height, Items.Count); i++)
             {
-
                 int elementIndex = i + scroll;
-
 
                 if (wasPainted)
                 {
@@ -90,7 +94,6 @@ namespace fileManager
         }
         public void Update(ConsoleKeyInfo key)
         {
-
             selectedPrevIndex = selectedIndex;
             if (key.Key == ConsoleKey.DownArrow && selectedIndex + 1 < Items.Count)
                 selectedIndex++;
@@ -111,7 +114,7 @@ namespace fileManager
             {
                 if (Items.Count == 0)
                 {
-                    this.Error("There is no items to choose.");
+                    ModuleWindow.ErrorMessage("There is no items to choose.");
                 }
                 else
                 {
@@ -119,6 +122,7 @@ namespace fileManager
                     Selected(this, EventArgs.Empty);
                 }
                 scroll = 0;
+
             }
             else if (key.Key == ConsoleKey.Backspace)
             {
@@ -128,22 +132,61 @@ namespace fileManager
             }
             else if (key.Key == ConsoleKey.F4)
             {
-                Clean();
-                Items.Clear();
-                directory.Clear();
-                string[] discs = Environment.GetLogicalDrives();
-                for (int i = 0; i < discs.Length; i++)
-                {
-                    DirectoryInfo dc = (new DirectoryInfo(discs[i]));
-                    Items.Add(new ListViewItem((object)dc, dc.ToString()));
-                }
-                wasPainted = false;
+                GetDirectories();
             }
             else if (key.Key == ConsoleKey.F1)
             {
-                buffer = new MyBuffer(directory.ReturnStringPath(), Items[selectedIndex].ReturnItemName());
+                try
+                {
+                    buffer = new MyBuffer(directory.ReturnStringPath(), Items[selectedIndex].ReturnItemName());
+                }
+                catch
+                {
+                    ModuleWindow.ErrorMessage("There is no item to choose");
+                }
             }
             else if (key.Key == ConsoleKey.F2)
+            {
+                CutItem();
+            }
+            else if (key.Key == ConsoleKey.F3)
+            {
+                PasteItem();
+            }
+            else if (key.Key == ConsoleKey.F6)
+            {
+                try
+                {
+                    Properties(Items[selectedIndex]);
+                }
+                catch
+                {
+                    ModuleWindow.ErrorMessage("There is no item to choose");
+                }
+            }
+        }
+
+        private void PasteItem()
+        {
+            try
+            {
+                if (Items[selectedIndex].ReturnItemName().Contains("."))
+                    buffer.FileCopy(buffer.BuffPath, directory.ReturnStringPath());
+                else
+                    buffer.DirectoryCopy(buffer.BuffPath, directory.ReturnStringPath());
+                wasPainted = false;
+                if (Directory.Exists("temp"))
+                    buffer.DeleteDirectory("temp");
+            }
+            catch
+            {
+                ModuleWindow.ErrorMessage("The Buffer is Empty");
+            }
+        }
+
+        private void CutItem()
+        {
+            try
             {
                 string fullPath = directory.ReturnStringPath() + "\\" + Items[selectedIndex].ReturnItemName();
                 Directory.CreateDirectory("temp");
@@ -158,24 +201,26 @@ namespace fileManager
                     buffer.DirectoryCopy(fullPath, buffer.BuffPath);
                     buffer.DeleteDirectory(fullPath);
                 }
-                buffer = new MyBuffer(buffer.BuffPath , Items[selectedIndex].ReturnItemName());
-
+                buffer = new MyBuffer(buffer.BuffPath, Items[selectedIndex].ReturnItemName());
             }
-            else if (key.Key == ConsoleKey.F3)
+            catch
             {
-                if (buffer.NameFile.Contains("."))
-                    buffer.FileCopy(buffer.BuffPath,directory.ReturnStringPath());
-                else
-                    buffer.DirectoryCopy(buffer.BuffPath, directory.ReturnStringPath());
-                wasPainted = false;
-                if (Directory.Exists("temp"))
-                    buffer.DeleteDirectory("temp");
+                ModuleWindow.ErrorMessage("There is no item to choose");
             }
-            else if (key.Key == ConsoleKey.F6)
-            {
-                Properties(Items[selectedIndex]);
+        }
 
+        private void GetDirectories()
+        {
+            Clean();
+            Items.Clear();
+            directory.Clear();
+            string[] discs = Environment.GetLogicalDrives();
+            for (int i = 0; i < discs.Length; i++)
+            {
+                DirectoryInfo dc = (new DirectoryInfo(discs[i]));
+                Items.Add(new ListViewItem((object)dc, dc.ToString()));
             }
+            wasPainted = false; ;
         }
 
         private void Properties(ListViewItem view)
@@ -238,17 +283,6 @@ namespace fileManager
 
         }
 
-        public void Error(string message)
-        {
-            Console.Clear();
-            Console.WriteLine(message);
-            Console.WriteLine();
-            Console.WriteLine("Press something and we continue ;)");
-            Console.ReadLine();
-            Console.Clear();
-            this.Render();
-        }
-
         private static void View_Selected(object sender, EventArgs e)
         {
             var view = (ListView)sender;
@@ -262,7 +296,7 @@ namespace fileManager
                 }
                 catch
                 {
-                    view.Error("You can't open this file(");
+                    ModuleWindow.ErrorMessage("You can't open this file(");
                 }
             }
             else if (info is DirectoryInfo)
@@ -273,7 +307,7 @@ namespace fileManager
                 }
                 catch
                 {
-                    view.Error("You can't open this directoryectory(");
+                    ModuleWindow.ErrorMessage("You can't open this directoryectory(");
                 }
             }
         }
@@ -290,9 +324,8 @@ namespace fileManager
             }
             catch
             {
-                view.Error("You can't open this directoryectory(");
+                ModuleWindow.ErrorMessage("You can't open this directoryectory(");
             }
-
         }
 
         public event EventHandler Selected;
