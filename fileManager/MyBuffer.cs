@@ -11,16 +11,24 @@ namespace fileManager
     {
         public string BuffPath;
 
+        private string name;
         public MyBuffer(string path, string name)
         {
             BuffPath = path;
+            this.name = name;
         }
 
-        public void DirectoryCopy(string sourceDirName, string destDirName)
+        public MyBuffer(string path)
         {
-            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
+            BuffPath = path;
+            Directory.CreateDirectory(path);
+        }
 
-            string destination = destDirName + "\\" + GetName(sourceDirName);
+        private void DirectoryCopy(string sourceDirName, string destDirName)
+        {
+            DirectoryInfo dir = new DirectoryInfo(sourceDirName + "\\" + name);
+
+            string destination = destDirName + "\\" + name;
 
             Directory.CreateDirectory(destination);
 
@@ -39,11 +47,18 @@ namespace fileManager
             }
         }
 
-        public void FileCopy(string path,string destDirName)
+        private void FileCopy(string path, string destDirName)
         {
-            FileInfo file = new FileInfo(path);
-            string destination = destDirName+"//"+GetName(path);
-            file.CopyTo(destination, true);
+            try
+            {
+                FileInfo file = new FileInfo(path + "//" + name);
+                string destination = destDirName + "//" + name;
+                file.CopyTo(destination, true);
+            }
+            catch
+            {
+                ModuleWindow.ErrorMessage("File copied from this directory!");
+            }
         }
 
         public void DeleteDirectory(string target_dir)
@@ -65,10 +80,30 @@ namespace fileManager
             Directory.Delete(target_dir, false);
         }
 
-        private string GetName(string path)
+        public void CopyToBuffFile(string path, string name)
         {
-            string[] getItemName = path.Split('\\');
-            return getItemName[getItemName.Length - 1];
+            this.name = name;
+            FileCopy(path, BuffPath);
+        }
+
+        public void CopyToBuffFolder(string path, string name)
+        {
+            this.name = name;
+            DirectoryCopy(path, BuffPath);
+        }
+
+        public void Upload(string path)
+        {
+            if (name.Contains('.'))
+                FileCopy(BuffPath, path);
+            else
+                DirectoryCopy(BuffPath, path);
+        }
+
+        public void ClearBuffer()
+        {
+            DeleteDirectory(BuffPath);
+            Directory.CreateDirectory("temp");
         }
     }
 }

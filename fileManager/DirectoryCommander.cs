@@ -18,12 +18,16 @@ namespace fileManager
 
         private ConsoleColor activeColor, nonActiveColor;
 
+        private MyBuffer buffer;
+
         public DirectoryectoryCommander(int windowHeight)
         {
+            buffer = new MyBuffer("temp");
+
             this.windowHeight = windowHeight;
             windows = new ListView[] {
-                new ListView(5, 2, windowHeight),
-                new ListView(Console.WindowWidth/2 +5, 2, windowHeight)
+                new ListView(5, 2, windowHeight, buffer),
+                new ListView(Console.WindowWidth/2 +5, 2, windowHeight, buffer)
                 };
             onFocusedElement = 0;
 
@@ -41,9 +45,10 @@ namespace fileManager
                 for (int i = 0; i < windows.Length; i++)
                 {
                     if (i == onFocusedElement)
-                    { 
+                    {
                         windows[i].Update(key);
                         windows[i].Render(activeColor);
+                        ModuleWindow.ReadMessage();
                     }
 
                 }
@@ -56,34 +61,85 @@ namespace fileManager
             for (int i = 0; i < windows.Length; i++)
             {
                 if (i == onFocusedElement)
+                { 
                     windows[i].Render(activeColor, painAll: true);
+                }
                 else
+                {
                     windows[i].Render(nonActiveColor, true);
+                }
             }
         }
         private void Update(ConsoleKeyInfo key, ref int item)
         {
-            if (key.Key == ConsoleKey.RightArrow)
+            try
             {
-                item++;
-                RenderItems();
+                if (key.Key == ConsoleKey.RightArrow)
+                    item++;
+
+                else if (key.Key == ConsoleKey.LeftArrow)
+                    item--;
+
+                if (item >= windows.Length)
+                    item = 0;
+
+                else if (item < 0)
+                    item = windows.Length - 1;
+
+                if (key.Key == ConsoleKey.F1)
+                {
+                    windows[onFocusedElement].CutItem(false);
+                }
+                else if (key.Key == ConsoleKey.F2)
+                {
+                    windows[onFocusedElement].CutItem(true);
+                }
+
+                else if (key.Key == ConsoleKey.F3)
+                {
+                    try
+                    {
+                        windows[onFocusedElement].PasteItem();
+                    }
+                    catch
+                    {
+                        throw new InvalidOperationException("Buffer is missing");
+                    }
+                }
+
+                else if (key.Key == ConsoleKey.F4)
+                {
+                    windows[onFocusedElement].GetDirectories();
+                }
+
+                else if (key.Key == ConsoleKey.F6)
+                {
+                    windows[onFocusedElement].Properties();
+                    RenderItems();
+                }
+
+                else if (key.Key == ConsoleKey.Enter)
+                {
+                    try
+                    {
+                        windows[onFocusedElement].Enter();
+                    }
+                    catch (Exception ex)
+                    {
+                        ModuleWindow.ErrorMessage(ex.Message);
+                        RenderItems();
+                    }
+                }
             }
-            else if (key.Key == ConsoleKey.LeftArrow)
+            catch(Exception ex)
             {
-                item--;
-                RenderItems();
+                ModuleWindow.ErrorMessage(ex.Message);
             }
-            if (item >= windows.Length)
-                item = 0;
-            else if (item < 0)
-                item = windows.Length - 1;
-            /*if (key.Key == ConsoleKey.F1)
-            {
-                buffer = new MyBuffer(windows[i].Items.directory.ReturnStringPath() + "\\" + Items[selectedIndex].ReturnItemName());
-            }*/
+
+            RenderItems();
         }
 
-        
+
 
 
     }

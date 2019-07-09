@@ -24,12 +24,14 @@ namespace fileManager
         public List<int> ColumnsWidth { get; set; }
         public List<ListViewItem> Items { get; set; }
 
-        public ListView(int x, int y, int height)
+        public ListView(int x, int y, int height, MyBuffer buffer)
         {
             this.x = x;
             this.y = y;
             this.height = height;
             directory = new PathView();
+
+            this.buffer = buffer;
 
             ColumnsWidth = new List<int> { Console.WindowWidth / 2 - 30, 13, 13 };
             Items = GetItems(directory.Getdirectoryectory());
@@ -41,7 +43,6 @@ namespace fileManager
 
         public void Clean()
         {
-
             selectedIndex = selectedPrevIndex = 0;
             wasPainted = false;
             for (int i = 0; i < Math.Min(height, Items.Count); i++)
@@ -56,7 +57,7 @@ namespace fileManager
 
         public bool Focused { get; set; }
 
-        public void Render(ConsoleColor color, bool painAll=false)
+        public void Render(ConsoleColor color, bool painAll = false)
         {
             if (painAll)
                 wasPainted = false;
@@ -110,106 +111,67 @@ namespace fileManager
                 scroll--;
                 wasPainted = false;
             }
-            else if (key.Key == ConsoleKey.Enter)
-            {
-                if (Items.Count == 0)
-                {
-                    ModuleWindow.ErrorMessage("There is no items to choose.");
-                }
-                else
-                {
-                    directory.Go(Items[selectedIndex].ReturnItemName());
-                    Selected(this, EventArgs.Empty);
-                }
-                scroll = 0;
 
-            }
             else if (key.Key == ConsoleKey.Backspace)
             {
                 directory.GoUp();
                 Up(this, EventArgs.Empty);
                 scroll = 0;
             }
-            else if (key.Key == ConsoleKey.F4)
-            {
-                GetDirectories();
-            }
-            else if (key.Key == ConsoleKey.F1)
-            {
-                try
-                {
-                    buffer = new MyBuffer(directory.ReturnStringPath(), Items[selectedIndex].ReturnItemName());
-                }
-                catch
-                {
-                    ModuleWindow.ErrorMessage("There is no item to choose");
-                }
-            }
-            else if (key.Key == ConsoleKey.F2)
-            {
-                CutItem();
-            }
-            else if (key.Key == ConsoleKey.F3)
-            {
-                PasteItem();
-            }
-            else if (key.Key == ConsoleKey.F6)
-            {
-                try
-                {
-                    Properties(Items[selectedIndex]);
-                }
-                catch
-                {
-                    ModuleWindow.ErrorMessage("There is no item to choose");
-                }
-            }
         }
 
-        private void PasteItem()
+        public void Enter()
         {
-            try
+            if (Items.Count == 0)
             {
-                if (Items[selectedIndex].ReturnItemName().Contains("."))
-                    buffer.FileCopy(buffer.BuffPath, directory.ReturnStringPath());
-                else
-                    buffer.DirectoryCopy(buffer.BuffPath, directory.ReturnStringPath());
-                wasPainted = false;
-                if (Directory.Exists("temp"))
-                    buffer.DeleteDirectory("temp");
+                throw new InvalidOperationException("There is no items to choose.");
             }
-            catch
+            else
             {
-                ModuleWindow.ErrorMessage("The Buffer is Empty");
+                directory.Go(Items[selectedIndex].ReturnItemName());
+                Selected(this, EventArgs.Empty);
             }
+            scroll = 0;
         }
 
-        private void CutItem()
+        public void PasteItem()
+        {
+            buffer.Upload(directory.ReturnStringPath());
+            buffer.ClearBuffer();
+
+            Items = GetItems(directory.ReturnStringPath());
+            wasPainted = false;
+        }
+
+        public void CutItem(bool isCut)
         {
             try
             {
                 string fullPath = directory.ReturnStringPath() + "\\" + Items[selectedIndex].ReturnItemName();
-                Directory.CreateDirectory("temp");
-                buffer = new MyBuffer("temp", Items[selectedIndex].ReturnItemName());
                 if (Items[selectedIndex].ReturnItemName().Contains("."))
                 {
-                    buffer.FileCopy(fullPath, buffer.BuffPath);
-                    File.Delete(fullPath);
+                    buffer.CopyToBuffFile(directory.ReturnStringPath(), Items[selectedIndex].ReturnItemName());
+                    if (isCut)
+                        File.Delete(fullPath);
                 }
                 else
                 {
-                    buffer.DirectoryCopy(fullPath, buffer.BuffPath);
-                    buffer.DeleteDirectory(fullPath);
+                    buffer.CopyToBuffFolder(directory.ReturnStringPath(), Items[selectedIndex].ReturnItemName());
+                    if (isCut)
+                        buffer.DeleteDirectory(fullPath);
                 }
-                buffer = new MyBuffer(buffer.BuffPath, Items[selectedIndex].ReturnItemName());
+                Clean();
+                Items = GetItems(directory.ReturnStringPath());
+                wasPainted = false;
             }
             catch
             {
-                ModuleWindow.ErrorMessage("There is no item to choose");
+                throw new InvalidOperationException("There is no item to choose");
             }
+
         }
 
-        private void GetDirectories()
+        public void GetDirectories()
         {
             Clean();
             Items.Clear();
@@ -220,54 +182,68 @@ namespace fileManager
                 DirectoryInfo dc = (new DirectoryInfo(discs[i]));
                 Items.Add(new ListViewItem((object)dc, dc.ToString()));
             }
-            wasPainted = false; ;
         }
 
-        private void Properties(ListViewItem view)
+        public void Properties()
         {
             Console.ForegroundColor = ConsoleColor.DarkGreen;
             Console.BackgroundColor = ConsoleColor.White;
 
-
             Console.CursorLeft = 0;
-            Console.CursorTop =height/2;
-            var info = view.State;
-            if (info is FileInfo)
+            Console.CursorTop = height / 2;
+            try
             {
-                var file=info as FileInfo;
+                var info = Items[selectedIndex].State;
 
-                Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
-                Console.WriteLine(String.Format("{0,-30}{1,-50}", "Name: ", file.Name).PadRight(Console.WindowWidth-1, ' '));
-                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Parent Directory: " , file.Directory).PadRight(Console.WindowWidth-1, ' '));
-                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Root Directory: " , file.DirectoryName).PadRight(Console.WindowWidth - 1, ' '));
-                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Is read only: " , file.IsReadOnly).PadRight(Console.WindowWidth - 1, ' '));
-                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Last Read Time: " , file.LastAccessTime).PadRight(Console.WindowWidth - 1, ' '));
-                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Last Write Time: " , file.LastWriteTime).PadRight(Console.WindowWidth - 1, ' '));
-                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Size: ", file.Length).PadRight(Console.WindowWidth - 1, ' '));
-                Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
-                Console.ReadKey();
+                if (info is FileInfo)
+                {
+                    FileProperty(info);
+                }
+                else
+                {
+                    FolderProperty(info);
+                }
             }
-            else
+            catch
             {
-                var dir = info as DirectoryInfo;
-
-                Console.WriteLine("=".PadRight(Console.WindowWidth-1, '='));
-                Console.WriteLine(String.Format("{0,-30}{1,-50}", "Name: ", dir.Name).PadRight(Console.WindowWidth - 1, ' '));
-                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Root Directory: ", dir.FullName).PadRight(Console.WindowWidth - 1, ' '));
-                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Parent Directory: ", dir.Parent.Name).PadRight(Console.WindowWidth - 1, ' '));
-                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Last Read Time: ",  dir.LastAccessTime).PadRight(Console.WindowWidth - 1, ' '));
-                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Last Write Time: ", dir.LastWriteTime).PadRight(Console.WindowWidth - 1, ' '));
-                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Size: ", dir.EnumerateFiles("*.*", SearchOption.AllDirectories).Sum(fi => fi.Length)).PadRight(Console.WindowWidth - 1, ' '));
-                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Files: ", dir.GetFiles().Length).PadRight(Console.WindowWidth - 1, ' '));
-                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Folders: ", dir.GetDirectories().Length).PadRight(Console.WindowWidth - 1, ' '));
-                Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
-                Console.ReadKey();
+                throw new InvalidOperationException("There is no item to choose");
             }
-
             Console.ForegroundColor = ConsoleColor.White;
             Console.BackgroundColor = ConsoleColor.Black;
-            wasPainted = false;
 
+        }
+
+        private void FileProperty(object info)
+        {
+            var file = info as FileInfo;
+
+            Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
+            Console.WriteLine(String.Format("{0,-30}{1,-50}", "Name: ", file.Name).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Parent Directory: ", file.Directory).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Root Directory: ", file.DirectoryName).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Is read only: ", file.IsReadOnly).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Last Read Time: ", file.LastAccessTime).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Last Write Time: ", file.LastWriteTime).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Size: ", file.Length).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
+            Console.ReadKey();
+        }
+
+        private void FolderProperty(object info)
+        {
+            var dir = info as DirectoryInfo;
+
+            Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
+            Console.WriteLine(String.Format("{0,-30}{1,-50}", "Name: ", dir.Name).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Root Directory: ", dir.FullName).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Parent Directory: ", dir.Parent.Name).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Last Read Time: ", dir.LastAccessTime).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Last Write Time: ", dir.LastWriteTime).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Size: ", dir.EnumerateFiles("*.*", SearchOption.AllDirectories).Sum(fi => fi.Length)).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Files: ", dir.GetFiles().Length).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Folders: ", dir.GetDirectories().Length).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
+            Console.ReadKey();
         }
 
         private static List<ListViewItem> GetItems(string path)
@@ -296,7 +272,7 @@ namespace fileManager
                 }
                 catch
                 {
-                    ModuleWindow.ErrorMessage("You can't open this file(");
+                    throw new InvalidOperationException("You can't open this file(");
                 }
             }
             else if (info is DirectoryInfo)
@@ -307,7 +283,7 @@ namespace fileManager
                 }
                 catch
                 {
-                    ModuleWindow.ErrorMessage("You can't open this directoryectory(");
+                    throw new InvalidOperationException("You can't open this directoryectory(");
                 }
             }
         }
@@ -324,7 +300,7 @@ namespace fileManager
             }
             catch
             {
-                ModuleWindow.ErrorMessage("You can't open this directoryectory(");
+                throw new InvalidOperationException("You can't open this directoryectory(");
             }
         }
 
