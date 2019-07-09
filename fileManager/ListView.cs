@@ -120,6 +120,11 @@ namespace fileManager
             }
         }
 
+        internal void GetRoot()
+        {
+            throw new InvalidOperationException("Add some logic. Tomorrow. I promise.");
+        }
+
         public void Enter()
         {
             if (Items.Count == 0)
@@ -136,8 +141,15 @@ namespace fileManager
 
         public void PasteItem()
         {
-            buffer.Upload(directory.ReturnStringPath());
-            buffer.ClearBuffer();
+            try
+            {
+                buffer.Upload(directory.ReturnStringPath());
+                buffer.ClearBuffer();
+            }
+            catch
+            {
+                throw new InvalidOperationException("Buffer is missing");
+            }
 
             Items = GetItems(directory.ReturnStringPath());
             wasPainted = false;

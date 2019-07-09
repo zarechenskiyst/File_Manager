@@ -23,11 +23,14 @@ namespace fileManager
             Console.ForegroundColor = ConsoleColor.DarkRed;
             Console.BackgroundColor = ConsoleColor.DarkCyan;
 
-            Console.CursorTop = height ;
+            Console.CursorLeft = 0;
+            Console.CursorTop = height-5 ;
 
-            Console.WriteLine("=".PadRight(Console.WindowWidth - 3, '='));
-            Console.WriteLine(string.Format("{0, -50}{1,-45}", " ", message.PadRight(Console.WindowWidth - 61, ' ')));
-            Console.WriteLine("=".PadRight(Console.WindowWidth - 3, '='));
+            Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
+            Console.WriteLine(string.Empty.PadRight(Console.WindowWidth - 1));
+            Console.WriteLine(string.Format("{0, -45}{1,-65}", " ", message.PadRight(Console.WindowWidth - 46, ' ')));
+            Console.WriteLine(string.Empty.PadRight(Console.WindowWidth - 1));
+            Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
             Console.WriteLine(string.Format("{0, -60}{1,-45}", " ", "OK".PadRight(Console.WindowWidth - 61, ' ')));
 
             Console.ForegroundColor = saveForeground;
@@ -36,7 +39,7 @@ namespace fileManager
             Console.Clear();
         }
 
-        public static string ReadMessage()
+        public static string ReadMessage(string message)
         {
             var saveForeground = Console.ForegroundColor;
             var saveBackground = Console.BackgroundColor;
@@ -45,14 +48,28 @@ namespace fileManager
             Console.BackgroundColor = ConsoleColor.DarkCyan;
 
             Console.CursorTop = height;
+            Console.CursorLeft =0;
+
+            Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
+            Console.WriteLine(string.Format("{0, -50}{1,-69}", " ", message));
+            Console.WriteLine(string.Empty.PadRight(Console.WindowWidth -1));
+            Console.WriteLine(string.Empty.PadRight(Console.WindowWidth - 1));
+            Console.WriteLine(string.Empty.PadRight(Console.WindowWidth - 1));
+
+            Console.CursorTop = Console.CursorTop - 2;
+            Console.CursorLeft = Console.WindowWidth/2 -10;
+
+            var returnString= Console.ReadLine();
 
             Console.WriteLine("=".PadRight(Console.WindowWidth - 3, '='));
-            Console.WriteLine(string.Format("{0, -50}{1,-45}", " ", "Enter name:"));
+            Console.WriteLine(string.Format("{0, -60}{1,-45}", " ", "OK".PadRight(Console.WindowWidth - 61, ' ')));
+
+            Console.ReadKey();
 
             Console.ForegroundColor = saveForeground;
             Console.BackgroundColor = saveBackground;
 
-            return Console.ReadLine();
+            return returnString;
         }
 
 
