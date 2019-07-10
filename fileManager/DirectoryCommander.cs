@@ -129,8 +129,30 @@ namespace fileManager
                     windows[onFocusedElement].Properties();
                     RenderItems();
                 }
-
-                
+                else if (key.Key == ConsoleKey.F7)
+                {
+                    if (windows[onFocusedElement].Items.Count == 0)
+                        throw new InvalidOperationException("There is no items");
+                    var newName = ModuleWindow.ReadMessage("Enter new Name:");
+                    windows[onFocusedElement].Rename(newName);
+                    RenderItems();
+                }
+                else if (key.Key == ConsoleKey.F8)
+                {
+                    if (windows[onFocusedElement].Items.Count == 0)
+                        throw new InvalidOperationException("There is no items in this directory");
+                    var name = ModuleWindow.ReadMessage("Enter file name:");
+                    windows[onFocusedElement].Find(name);
+                    if (windows[onFocusedElement].Items.Count == 0)
+                        throw new InvalidOperationException("File not found(");
+                    RenderItems();
+                }
+                else if (key.Key == ConsoleKey.F9)
+                {
+                    var name = ModuleWindow.ReadMessage("Enter new direction name:");
+                    windows[onFocusedElement].CreateDirectory(name);
+                    RenderItems();
+                }
 
                 else if (key.Key == ConsoleKey.Enter)
                 {

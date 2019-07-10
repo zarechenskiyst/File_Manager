@@ -122,7 +122,64 @@ namespace fileManager
 
         internal void GetRoot()
         {
-            throw new InvalidOperationException("Add some logic. Tomorrow. I promise.");
+            var info = Path.GetPathRoot(directory.ReturnStringPath());
+            Clean();
+            directory = new PathView(info);
+            Items = GetItems(info);
+            wasPainted = false;
+        }
+
+        internal void Rename(string name)
+        {
+            try
+            {
+                var info = Items[selectedIndex].State;
+                if (info is FileInfo)
+                {
+                    var file = info as FileInfo;
+                    string newPath = Path.Combine(file.Directory.ToString(), name);
+                    File.Move(file.FullName, newPath);
+                }
+                else if (info is DirectoryInfo)
+                {
+                    var dir = info as DirectoryInfo;
+                    string newPath = Path.Combine(dir.Parent.FullName, name);
+                    Directory.Move(dir.FullName, newPath);
+                }
+                Items = GetItems(directory.ReturnStringPath());
+            }
+            catch
+            {
+                throw new InvalidOperationException("File with the same name already exist");
+            }
+        }
+
+        internal void Find(string name)
+        {
+            
+            try
+            {
+                string[] allFoundFiles = Directory.GetFiles(directory.ReturnStringPath(), name, SearchOption.AllDirectories);
+                Clean();
+                Items.Clear();
+                for (int i = 0; i < allFoundFiles.Length; i++)
+                {
+                    object dc = new object();
+                    if (name.Contains("."))
+                    Items.Add(new ListViewItem(dc, dc.ToString()));
+                }
+            }
+            catch
+            {
+                throw new InvalidOperationException("This directory have folders without access");
+            }
+        }
+
+        internal void CreateDirectory(string name)
+        {
+            string path = Path.Combine(directory.ReturnStringPath(), name);
+            Directory.CreateDirectory(path);
+            Items = GetItems(directory.ReturnStringPath());
         }
 
         public void Enter()
@@ -198,30 +255,37 @@ namespace fileManager
 
         public void Properties()
         {
-            Console.ForegroundColor = ConsoleColor.DarkGreen;
-            Console.BackgroundColor = ConsoleColor.White;
+            if (Items.Count == 0)
+                throw new InvalidOperationException("There is no item to choose");
+            else {
+                var saveForeground = Console.ForegroundColor;
+                var saveBackground = Console.BackgroundColor;
 
-            Console.CursorLeft = 0;
-            Console.CursorTop = height / 2;
-            try
-            {
+                Console.ForegroundColor = ConsoleColor.DarkGreen;
+                Console.BackgroundColor = ConsoleColor.White;
+
+                Console.CursorLeft = 0;
+                Console.CursorTop = height / 2;
+
                 var info = Items[selectedIndex].State;
 
-                if (info is FileInfo)
+                try
                 {
-                    FileProperty(info);
+                    if (info is FileInfo)
+                    {
+                        FileProperty(info);
+                    }
+                    else
+                    {
+                        FolderProperty(info);
+                    }
                 }
-                else
+                finally
                 {
-                    FolderProperty(info);
+                    Console.ForegroundColor = saveForeground;
+                    Console.BackgroundColor = saveBackground;
                 }
             }
-            catch
-            {
-                throw new InvalidOperationException("There is no item to choose");
-            }
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.BackgroundColor = ConsoleColor.Black;
 
         }
 
@@ -231,8 +295,8 @@ namespace fileManager
 
             Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
             Console.WriteLine(String.Format("{0,-30}{1,-50}", "Name: ", file.Name).PadRight(Console.WindowWidth - 1, ' '));
-            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Parent Directory: ", file.Directory).PadRight(Console.WindowWidth - 1, ' '));
-            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Root Directory: ", file.DirectoryName).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Parent Directory: ", file.DirectoryName).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Root Directory: ", file.Directory.Root).PadRight(Console.WindowWidth - 1, ' '));
             Console.WriteLine(String.Format("{0,-30}{1,-80}", "Is read only: ", file.IsReadOnly).PadRight(Console.WindowWidth - 1, ' '));
             Console.WriteLine(String.Format("{0,-30}{1,-80}", "Last Read Time: ", file.LastAccessTime).PadRight(Console.WindowWidth - 1, ' '));
             Console.WriteLine(String.Format("{0,-30}{1,-80}", "Last Write Time: ", file.LastWriteTime).PadRight(Console.WindowWidth - 1, ' '));
@@ -243,17 +307,27 @@ namespace fileManager
 
         private void FolderProperty(object info)
         {
+
             var dir = info as DirectoryInfo;
 
             Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
             Console.WriteLine(String.Format("{0,-30}{1,-50}", "Name: ", dir.Name).PadRight(Console.WindowWidth - 1, ' '));
-            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Root Directory: ", dir.FullName).PadRight(Console.WindowWidth - 1, ' '));
-            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Parent Directory: ", dir.Parent.Name).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Root Directory: ", dir.Root).PadRight(Console.WindowWidth - 1, ' '));
+            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Parent Directory: ", dir.Parent.FullName).PadRight(Console.WindowWidth - 1, ' '));
             Console.WriteLine(String.Format("{0,-30}{1,-80}", "Last Read Time: ", dir.LastAccessTime).PadRight(Console.WindowWidth - 1, ' '));
             Console.WriteLine(String.Format("{0,-30}{1,-80}", "Last Write Time: ", dir.LastWriteTime).PadRight(Console.WindowWidth - 1, ' '));
-            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Size: ", dir.EnumerateFiles("*.*", SearchOption.AllDirectories).Sum(fi => fi.Length)).PadRight(Console.WindowWidth - 1, ' '));
-            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Files: ", dir.GetFiles().Length).PadRight(Console.WindowWidth - 1, ' '));
-            Console.WriteLine(String.Format("{0,-30}{1,-80}", "Folders: ", dir.GetDirectories().Length).PadRight(Console.WindowWidth - 1, ' '));
+            try
+            {
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Size: ", dir.EnumerateFiles("*.*", SearchOption.AllDirectories).Sum(fi => fi.Length)).PadRight(Console.WindowWidth - 1, ' '));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Files: ", dir.GetFiles().Length).PadRight(Console.WindowWidth - 1, ' '));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Folders: ", dir.GetDirectories().Length).PadRight(Console.WindowWidth - 1, ' '));
+            }
+            catch
+            {
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Size: ", "Information not available".PadRight(Console.WindowWidth - 1, ' ')));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Files: ", "Information not available".PadRight(Console.WindowWidth - 1, ' ')));
+                Console.WriteLine(String.Format("{0,-30}{1,-80}", "Folders: ", "Information not available".PadRight(Console.WindowWidth - 1, ' ')));
+            }
             Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
             Console.ReadKey();
         }
@@ -266,7 +340,7 @@ namespace fileManager
                     f,
                     f.Name,
                     f is DirectoryInfo ? "<directory>" : f.Extension,
-                    f is FileInfo ? (f as FileInfo).Length.ToString() : ""
+                    f is FileInfo ? BytesAsString((f as FileInfo).Length) : ""
                 )).ToList();
 
         }
@@ -314,6 +388,21 @@ namespace fileManager
             {
                 throw new InvalidOperationException("You can't open this directoryectory(");
             }
+        }
+
+        private static string BytesAsString(float bytes)
+        {
+            string[] suffix = { "B", "KB", "MB", "GB", "TB" };
+            int i;
+            double doubleBytes = bytes;
+
+            
+                for (i = 0; (int)(bytes / 1024) > 0; i++, bytes /= 1024)
+                {
+                    doubleBytes = bytes / 1024.0;
+                }
+            
+            return string.Format("{0:0.00} {1}", doubleBytes, suffix[i]);
         }
 
         public event EventHandler Selected;

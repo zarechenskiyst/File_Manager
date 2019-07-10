@@ -20,8 +20,8 @@ namespace fileManager
             var saveForeground = Console.ForegroundColor;
             var saveBackground = Console.BackgroundColor;
 
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            Console.BackgroundColor = ConsoleColor.DarkCyan;
+            Console.ForegroundColor = ConsoleColor.DarkBlue;
+            Console.BackgroundColor = ConsoleColor.DarkRed;
 
             Console.CursorLeft = 0;
             Console.CursorTop = height-5 ;
