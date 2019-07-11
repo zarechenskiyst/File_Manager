@@ -12,7 +12,7 @@ namespace fileManager
 
         static ModuleWindow()
         {
-            height = Console.WindowHeight/2;
+            height = Console.WindowHeight / 2;
         }
 
         public static void ErrorMessage(string message)
@@ -24,7 +24,7 @@ namespace fileManager
             Console.BackgroundColor = ConsoleColor.DarkRed;
 
             Console.CursorLeft = 0;
-            Console.CursorTop = height-5 ;
+            Console.CursorTop = height - 5;
 
             Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
             Console.WriteLine(string.Empty.PadRight(Console.WindowWidth - 1));
@@ -48,18 +48,18 @@ namespace fileManager
             Console.BackgroundColor = ConsoleColor.DarkCyan;
 
             Console.CursorTop = height;
-            Console.CursorLeft =0;
+            Console.CursorLeft = 0;
 
             Console.WriteLine("=".PadRight(Console.WindowWidth - 1, '='));
             Console.WriteLine(string.Format("{0, -50}{1,-69}", " ", message));
-            Console.WriteLine(string.Empty.PadRight(Console.WindowWidth -1));
+            Console.WriteLine(string.Empty.PadRight(Console.WindowWidth - 1));
             Console.WriteLine(string.Empty.PadRight(Console.WindowWidth - 1));
             Console.WriteLine(string.Empty.PadRight(Console.WindowWidth - 1));
 
             Console.CursorTop = Console.CursorTop - 2;
-            Console.CursorLeft = Console.WindowWidth/2 -10;
+            Console.CursorLeft = Console.WindowWidth / 2 - 10;
 
-            var returnString= Console.ReadLine();
+            var returnString = Console.ReadLine();
 
             Console.WriteLine("=".PadRight(Console.WindowWidth - 3, '='));
             Console.WriteLine(string.Format("{0, -60}{1,-45}", " ", "OK".PadRight(Console.WindowWidth - 61, ' ')));
@@ -71,7 +71,5 @@ namespace fileManager
 
             return returnString;
         }
-
-
     }
 }

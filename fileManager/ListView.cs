@@ -38,7 +38,6 @@ namespace fileManager
 
             Selected += View_Selected;
             Up += UpDirectory;
-
         }
 
         public void Clean()
@@ -64,7 +63,9 @@ namespace fileManager
 
             if (!wasPainted)
                 directory.Show(x, ColumnsWidth.Sum(), color);
+
             Console.BackgroundColor = color;
+
             for (int i = 0; i < Math.Min(height, Items.Count); i++)
             {
                 int elementIndex = i + scroll;
@@ -83,7 +84,6 @@ namespace fileManager
                     Console.ForegroundColor = ConsoleColor.Black;
                     Console.BackgroundColor = ConsoleColor.White;
                 }
-
                 Console.CursorLeft = x;
                 Console.CursorTop = i + y;
                 item.Render(ColumnsWidth, i, x, y);
@@ -106,6 +106,7 @@ namespace fileManager
                 scroll++;
                 wasPainted = false;
             }
+
             else if (selectedIndex < scroll)
             {
                 scroll--;
@@ -120,7 +121,7 @@ namespace fileManager
             }
         }
 
-        internal void GetRoot()
+        public void GetRoot()
         {
             var info = Path.GetPathRoot(directory.ReturnStringPath());
             Clean();
@@ -129,7 +130,7 @@ namespace fileManager
             wasPainted = false;
         }
 
-        internal void Rename(string name)
+        public void Rename(string name)
         {
             try
             {
@@ -154,9 +155,8 @@ namespace fileManager
             }
         }
 
-        internal void Find(string name)
+        public void Find(string name)
         {
-            
             try
             {
                 string[] allFoundFiles = Directory.GetFiles(directory.ReturnStringPath(), name, SearchOption.AllDirectories);
@@ -166,7 +166,7 @@ namespace fileManager
                 {
                     object dc = new object();
                     if (name.Contains("."))
-                    Items.Add(new ListViewItem(dc, dc.ToString()));
+                        Items.Add(new ListViewItem(dc, dc.ToString()));
                 }
             }
             catch
@@ -175,7 +175,7 @@ namespace fileManager
             }
         }
 
-        internal void CreateDirectory(string name)
+        public void CreateDirectory(string name)
         {
             string path = Path.Combine(directory.ReturnStringPath(), name);
             Directory.CreateDirectory(path);
@@ -190,7 +190,18 @@ namespace fileManager
             }
             else
             {
-                directory.Go(Items[selectedIndex].ReturnItemName());
+                var view = Items[selectedIndex].State;
+                if (view is FileInfo)
+                {
+                    var info = view as FileInfo;
+                    directory.Go(info.Name);
+                }
+
+                else if (view is DirectoryInfo)
+                {
+                    var info = view as DirectoryInfo;
+                    directory.Go(info.Name);
+                }
                 Selected(this, EventArgs.Empty);
             }
             scroll = 0;
@@ -198,15 +209,8 @@ namespace fileManager
 
         public void PasteItem()
         {
-            try
-            {
-                buffer.Upload(directory.ReturnStringPath());
-                buffer.ClearBuffer();
-            }
-            catch
-            {
-                throw new InvalidOperationException("Buffer is missing");
-            }
+            buffer.Paste(directory.ReturnStringPath());
+            buffer = new MyBuffer();
 
             Items = GetItems(directory.ReturnStringPath());
             wasPainted = false;
@@ -216,28 +220,23 @@ namespace fileManager
         {
             try
             {
-                string fullPath = directory.ReturnStringPath() + "\\" + Items[selectedIndex].ReturnItemName();
-                if (Items[selectedIndex].ReturnItemName().Contains("."))
+                var view = Items[selectedIndex].State;
+                if (view is FileInfo)
                 {
-                    buffer.CopyToBuffFile(directory.ReturnStringPath(), Items[selectedIndex].ReturnItemName());
-                    if (isCut)
-                        File.Delete(fullPath);
+                    var info = view as FileInfo;
+                    buffer = new MyBuffer(info.Directory.FullName, info.Name, isCut);
                 }
-                else
+                else if (view is DirectoryInfo)
                 {
-                    buffer.CopyToBuffFolder(directory.ReturnStringPath(), Items[selectedIndex].ReturnItemName());
-                    if (isCut)
-                        buffer.DeleteDirectory(fullPath);
+                    var info = view as DirectoryInfo;
+                    buffer = new MyBuffer(info.Parent.FullName, info.Name, isCut);
                 }
-                Clean();
-                Items = GetItems(directory.ReturnStringPath());
-                wasPainted = false;
+
             }
             catch
             {
                 throw new InvalidOperationException("There is no item to choose");
             }
-
         }
 
         public void GetDirectories()
@@ -342,7 +341,6 @@ namespace fileManager
                     f is DirectoryInfo ? "<directory>" : f.Extension,
                     f is FileInfo ? BytesAsString((f as FileInfo).Length) : ""
                 )).ToList();
-
         }
 
         private static void View_Selected(object sender, EventArgs e)
@@ -396,12 +394,12 @@ namespace fileManager
             int i;
             double doubleBytes = bytes;
 
-            
-                for (i = 0; (int)(bytes / 1024) > 0; i++, bytes /= 1024)
-                {
-                    doubleBytes = bytes / 1024.0;
-                }
-            
+
+            for (i = 0; (int)(bytes / 1024) > 0; i++, bytes /= 1024)
+            {
+                doubleBytes = bytes / 1024.0;
+            }
+
             return string.Format("{0:0.00} {1}", doubleBytes, suffix[i]);
         }
 

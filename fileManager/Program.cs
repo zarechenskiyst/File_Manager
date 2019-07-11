@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace fileManager
 {
-
     class Program
     {
         static void Main(string[] args)
@@ -23,6 +22,5 @@ namespace fileManager
             window.StartProgram();
         }
     }
-
 }
 

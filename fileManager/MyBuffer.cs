@@ -11,24 +11,26 @@ namespace fileManager
     {
         public string BuffPath;
 
+        private bool isCut;
         private string name;
-        public MyBuffer(string path, string name)
+        public MyBuffer(string path, string name, bool cut = false)
         {
             BuffPath = path;
             this.name = name;
+            isCut = cut;
         }
 
-        public MyBuffer(string path)
+        public MyBuffer()
         {
-            BuffPath = path;
-            Directory.CreateDirectory(path);
+            BuffPath = null;
+            name = null;
         }
 
-        private void DirectoryCopy(string sourceDirName, string destDirName)
+        public void DirectoryCopy(string sourceDirName, string destDirName)
         {
-            DirectoryInfo dir = new DirectoryInfo(sourceDirName + "\\" + name);
+            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
 
-            string destination = destDirName + "\\" + name;
+            string destination = destDirName;
 
             Directory.CreateDirectory(destination);
 
@@ -45,15 +47,19 @@ namespace fileManager
                 string temppath = Path.Combine(destination, subdir.Name);
                 DirectoryCopy(subdir.FullName, temppath);
             }
+            if (isCut)
+                DeleteDirectory(sourceDirName);
         }
 
-        private void FileCopy(string path, string destDirName)
+        public void FileCopy(string path, string destDirName)
         {
             try
             {
-                FileInfo file = new FileInfo(path + "//" + name);
-                string destination = destDirName + "//" + name;
+                FileInfo file = new FileInfo(path);
+                string destination = destDirName;
                 file.CopyTo(destination, true);
+                if (isCut)
+                    File.Delete(path);
             }
             catch
             {
@@ -80,30 +86,19 @@ namespace fileManager
             Directory.Delete(target_dir, false);
         }
 
-        public void CopyToBuffFile(string path, string name)
+        public void Paste(string destination)
         {
-            this.name = name;
-            FileCopy(path, BuffPath);
-        }
-
-        public void CopyToBuffFolder(string path, string name)
-        {
-            this.name = name;
-            DirectoryCopy(path, BuffPath);
-        }
-
-        public void Upload(string path)
-        {
-            if (name.Contains('.'))
-                FileCopy(BuffPath, path);
-            else
-                DirectoryCopy(BuffPath, path);
-        }
-
-        public void ClearBuffer()
-        {
-            DeleteDirectory(BuffPath);
-            Directory.CreateDirectory("temp");
+            try
+            {
+                if (name.Contains("."))
+                    FileCopy(Path.Combine(BuffPath, name), Path.Combine(destination, name));
+                else
+                    DirectoryCopy(Path.Combine(BuffPath, name), Path.Combine(destination, name));
+            }
+            catch
+            {
+                throw new InvalidOperationException("Buffer is missing");
+            }
         }
     }
 }

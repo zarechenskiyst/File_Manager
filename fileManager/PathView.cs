@@ -33,7 +33,7 @@ namespace fileManager
             if (currentPath.Length < maxWidth)
                 Console.WriteLine(currentPath.PadRight(maxWidth, ' '));
             else
-                Console.WriteLine("[...]"+ currentPath.Substring(currentPath.Length- maxWidth +5, maxWidth - 5));
+                Console.WriteLine("[...]" + currentPath.Substring(currentPath.Length - maxWidth + 5, maxWidth - 5));
         }
 
         public string ReturnStringPath()
@@ -43,7 +43,7 @@ namespace fileManager
 
         public void Clear()
         {
-            currentPath = "";
+            currentPath = string.Empty;
         }
 
         public void Go(string directoryName)

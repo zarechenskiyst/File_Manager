@@ -22,7 +22,7 @@ namespace fileManager
 
         public DirectoryectoryCommander(int windowHeight)
         {
-            buffer = new MyBuffer("temp");
+            buffer = new MyBuffer();
 
             this.windowHeight = windowHeight;
             windows = new ListView[] {
@@ -50,7 +50,6 @@ namespace fileManager
                         windows[i].Update(key);
                         windows[i].Render(activeColor);
                     }
-
                 }
             }
         }
@@ -68,8 +67,8 @@ namespace fileManager
                 {
                     windows[i].Render(nonActiveColor, true);
                 }
-                
             }
+
             RenderButtons();
         }
         private void Update(ConsoleKeyInfo key, ref int item)
@@ -104,6 +103,7 @@ namespace fileManager
                 {
                     windows[onFocusedElement].CutItem(false);
                 }
+
                 else if (key.Key == ConsoleKey.F2)
                 {
                     windows[onFocusedElement].CutItem(true);
@@ -129,6 +129,7 @@ namespace fileManager
                     windows[onFocusedElement].Properties();
                     RenderItems();
                 }
+
                 else if (key.Key == ConsoleKey.F7)
                 {
                     if (windows[onFocusedElement].Items.Count == 0)
@@ -137,6 +138,7 @@ namespace fileManager
                     windows[onFocusedElement].Rename(newName);
                     RenderItems();
                 }
+
                 else if (key.Key == ConsoleKey.F8)
                 {
                     if (windows[onFocusedElement].Items.Count == 0)
@@ -147,6 +149,7 @@ namespace fileManager
                         throw new InvalidOperationException("File not found(");
                     RenderItems();
                 }
+
                 else if (key.Key == ConsoleKey.F9)
                 {
                     var name = ModuleWindow.ReadMessage("Enter new direction name:");
